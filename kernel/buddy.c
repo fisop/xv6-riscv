@@ -12,7 +12,7 @@ static int nsizes;     // the number of entries in bd_sizes array
 #define LEAF_SIZE     16                         // The smallest block size
 #define MAXSIZE       (nsizes-1)                 // Largest index in bd_sizes array
 #define BLK_SIZE(k)   ((1L << (k)) * LEAF_SIZE)  // Size of block at size k
-#define HEAP_SIZE     BLK_SIZE(MAXSIZE) 
+#define HEAP_SIZE     BLK_SIZE(MAXSIZE)
 #define NBLK(k)       (1 << (MAXSIZE-k))         // Number of block at size k
 #define ROUNDUP(n,sz) (((((n)-1)/(sz))+1)*(sz))  // Round up to the next multiple of sz
 
@@ -31,7 +31,7 @@ struct sz_info {
 };
 typedef struct sz_info Sz_info;
 
-static Sz_info *bd_sizes; 
+static Sz_info *bd_sizes;
 static void *bd_base;   // start address of memory managed by the buddy allocator
 static struct spinlock lock;
 
@@ -60,7 +60,7 @@ void bit_clear(char *array, int index) {
 void
 bd_print_vector(char *vector, int len) {
   int last, lb;
-  
+
   last = 1;
   lb = 0;
   for (int b = 0; b < len; b++) {
@@ -212,7 +212,7 @@ log2(uint64 n) {
   return k;
 }
 
-// Mark memory from [start, stop), starting at size 0, as allocated. 
+// Mark memory from [start, stop), starting at size 0, as allocated.
 void
 bd_mark(void *start, void *stop)
 {
@@ -250,7 +250,7 @@ bd_initfree_pair(int k, int bi) {
   }
   return free;
 }
-  
+
 // Initialize the free lists for each size k.  For each size k, there
 // are only two pairs that may have a buddy that should be on free list:
 // bd_left and bd_right.
@@ -336,12 +336,12 @@ bd_init(void *base, void *end) {
   // done allocating; mark the memory range [base, p) as allocated, so
   // that buddy will not hand out that memory.
   int meta = bd_mark_data_structures(p);
-  
+
   // mark the unavailable memory range [end, HEAP_SIZE) as allocated,
   // so that buddy will not hand out that memory.
   int unavailable = bd_mark_unavailable(end, p);
   void *bd_end = bd_base+BLK_SIZE(MAXSIZE)-unavailable;
-  
+
   // initialize free lists for each size k
   int free = bd_initfree(p, bd_end);
 
