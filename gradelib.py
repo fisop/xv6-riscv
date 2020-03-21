@@ -7,6 +7,14 @@ from optparse import OptionParser
 __all__ = []
 
 ##################################################################
+# Default completion regex
+#
+
+__all__ += ["ALL_TESTS_RE"]
+
+ALL_TESTS_RE = "^(SOME TESTS FAILED|ALL TESTS PASSED)$|panic: "
+
+##################################################################
 # Test structure
 #
 
@@ -574,7 +582,8 @@ def shell_script(script, terminate_match=None):
         def handle_output(output):
             context.buf.extend(output)
             if terminate_match is not None:
-                if re.match(terminate_match, context.buf.decode('utf-8', 'replace')):
+                if re.search(terminate_match,
+                             context.buf.decode('utf-8', 'replace'), re.M):
                     raise TerminateTest
             if b'$ ' in context.buf:
                 context.buf = bytearray()
