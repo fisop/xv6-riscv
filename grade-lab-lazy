@@ -18,9 +18,8 @@ PTE_PRINT = """page table 0x0000000087f6e000
 
 @test(0, "running lazytests")
 def test_lazytests():
-    r.run_qemu(shell_script([
-        'lazytests'
-    ]))
+    r.run_qemu(shell_script(['lazytests'],
+                            terminate_match=ALL_TESTS_RE))
 
 @test(10, "lazy: pte printout", parent=test_lazytests)
 def test_filetest():
@@ -36,9 +35,9 @@ def test_memtest():
 
 @test(0, "usertests")
 def test_usertests():
-    r.run_qemu(shell_script([
-        'usertests'
-    ]), timeout=150)
+    r.run_qemu(shell_script(['usertests'],
+                            terminate_match=ALL_TESTS_RE),
+               timeout=150)
 
 def usertest_check(testcase, nextcase, output):
     if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
