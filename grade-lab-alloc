@@ -7,9 +7,9 @@ r = Runner(save("xv6.out"))
 
 @test(0, "running alloctest")
 def test_alloctest():
-    r.run_qemu(shell_script([
-        'alloctest'
-    ]))
+    r.run_qemu(shell_script(
+        ['alloctest'],
+        terminate_match="^memtest: (OK|FAILED)$|panic: "))
 
 @test(30, "filetest", parent=test_alloctest)
 def test_filetest():
@@ -21,9 +21,9 @@ def test_memtest():
 
 @test(20, "usertests")
 def test_usertests():
-    r.run_qemu(shell_script([
-        'usertests'
-    ]), timeout=150)
+    r.run_qemu(shell_script(['usertests'],
+                            terminate_match=ALL_TESTS_RE),
+               timeout=150)
     r.match('^ALL TESTS PASSED$')
 
 run_tests()
