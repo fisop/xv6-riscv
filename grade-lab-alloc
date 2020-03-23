@@ -9,15 +9,23 @@ r = Runner(save("xv6.out"))
 def test_alloctest():
     r.run_qemu(shell_script(
         ['alloctest'],
-        terminate_match="^memtest: (OK|FAILED)$|panic: "))
+        terminate_match="^sbrktest: (OK|FAILED)$|panic: "))
 
-@test(30, "filetest", parent=test_alloctest)
+@test(15, "filetest", parent=test_alloctest)
 def test_filetest():
     r.match("^filetest: OK$")
 
-@test(50, "memtest", parent=test_alloctest)
+@test(25, "memtest", parent=test_alloctest)
 def test_memtest():
     r.match("^memtest: OK$")
+
+@test(25, "memtest2", parent=test_alloctest)
+def test_memtest2():
+    r.match("^memtest2: OK$")
+
+@test(15, "sbrktest", parent=test_alloctest)
+def test_sbrktest():
+    r.match("^sbrktest: OK$")
 
 @test(20, "usertests")
 def test_usertests():

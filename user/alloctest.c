@@ -102,10 +102,94 @@ void test1()
   }
 }
 
+// allocate all mem, free it, and allocate again
+void
+test2()
+{
+  void *m1, *m2;
+  int pid, xstatus;
+
+  printf("memtest2: start\n");
+  if((pid = fork()) == 0){
+    m1 = 0;
+    while((m2 = malloc(10001)) != 0){
+      *(char**)m2 = m1;
+      m1 = m2;
+    }
+    while(m1){
+      m2 = *(char**)m1;
+      free(m1);
+      m1 = m2;
+    }
+    m1 = malloc(1024*20);
+    if(m1 == 0){
+      printf("couldn't allocate mem?!!\n");
+      exit(1);
+    }
+    free(m1);
+    exit(0);
+  } else {
+    wait(&xstatus);
+    if(xstatus != 0)
+      printf("memtest2: FAILED\n");
+    else
+      printf("memtest2: OK\n");
+  }
+}
+
+void
+test3()
+{
+  enum { TOOMUCH=1024*1024*1024};
+  int i, pid, pid2, xstatus;
+  char *c, *a, *b;
+
+  printf("sbrktest: start\n");
+  if((pid = fork()) == 0){
+    // does sbrk() return the expected failure value?
+    a = sbrk(TOOMUCH);
+    if(a != (char*)0xffffffffffffffffL){
+      printf("sbrk(<toomuch>) returned %p\n", a);
+      exit(1);
+    }
+
+    // can one sbrk() less than a page?
+    a = sbrk(0);
+    for(i = 0; i < 5000; i++){
+      b = sbrk(1);
+      if(b != a){
+        printf("sbrk test failed %d %x %x\n", i, a, b);
+        exit(1);
+      }
+      *b = 1;
+      a = b + 1;
+    }
+    pid2 = fork();
+    if(pid2 < 0){
+      printf("sbrk test fork failed\n");
+      exit(1);
+    }
+    c = sbrk(1);
+    c = sbrk(1);
+    if(c != a + 1){
+      printf("sbrk test failed post-fork\n");
+      exit(1);
+    }
+  } else {
+    wait(&xstatus);
+    if(xstatus != 0)
+      printf("sbrktest: FAILED\n");
+    else
+      printf("sbrktest: OK\n");
+  }
+}
+
 int
 main(int argc, char *argv[])
 {
   test0();
   test1();
+  test2();
+  test3();
   exit(0);
 }
