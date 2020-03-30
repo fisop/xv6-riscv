@@ -94,7 +94,7 @@ void test1()
   }
   //int n = (PHYSTOP-KERNBASE)/PGSIZE;
   //printf("allocated %d out of %d pages\n", tot, n);
-  if(tot < 31950) {
+  if(tot < 31950-32) {
     printf("expected to allocate at least 31950, only got %d\n", tot);
     printf("memtest: FAILED\n");  
   } else {
