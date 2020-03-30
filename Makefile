@@ -200,7 +200,7 @@ grade:
 	@echo $(MAKE) clean
 	@$(MAKE) clean || \
 	  (echo "'make clean' failed.  HINT: Do you have another running instance of xv6?" && exit 1)
-	./grade-lab-$(LAB) $(GRADEFLAGS)
+	./grade-lab$(LAB) $(GRADEFLAGS)
 
 WEBSUB := https://6828.scripts.mit.edu/2019/handin.py
 

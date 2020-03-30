@@ -1,1 +1,1 @@
-LAB=lock
+LAB=1
