@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+
+import re
+from gradelib import *
+
+r = Runner(save("xv6.out"))
+
+PTE_PRINT = """page table 0x00000000802aa000
+ ..0: pte 0x00000000200ab801 pa 0x00000000802ae000
+ .. ..0: pte 0x00000000200abc01 pa 0x00000000802af000
+ .. .. ..0: pte 0x00000000200ab41f pa 0x00000000802ad000
+ .. .. ..1: pte 0x00000000200ac00f pa 0x00000000802b0000
+ .. .. ..2: pte 0x00000000200ac41f pa 0x00000000802b1000
+ ..255: pte 0x00000000200aac01 pa 0x00000000802ab000
+ .. ..511: pte 0x00000000200ab001 pa 0x00000000802ac000
+ .. .. ..510: pte 0x00000000200a8807 pa 0x00000000802a2000
+ .. .. ..511: pte 0x000000002000200b pa 0x0000000080008000"""
+
+
+@test(0, "running alloctest")
+def test_alloctest():
+    r.run_qemu(shell_script(
+        ['alloctest'],
+        terminate_match="^memtest: (OK|FAILED)$|panic: "))
+
+@test(10, "filetest", parent=test_alloctest)
+def test_filetest():
+    r.match("^filetest: OK$")
+
+@test(10, "memtest", parent=test_alloctest)
+def test_memtest():
+    r.match("^memtest: OK$")
+
+
+@test(0, "running lazytests")
+def test_lazytests():
+    r.run_qemu(shell_script(
+        ['lazytests'],
+    terminate_match="^test out of memory: (OK|FAILED)$|panic: "))
+
+@test(10, "lazy: pte printout", parent=test_lazytests)
+def test_filetest():
+    [r.match("^{}$".format(l)) for l in PTE_PRINT.splitlines()]
+
+@test(10, "lazy: map", parent=test_lazytests)
+def test_filetest():
+    r.match("^test lazy unmap: OK$")
+
+@test(10, "lazy: unmap", parent=test_lazytests)
+def test_memtest():
+    r.match("test lazy alloc: OK$")
+
+
+@test(0, "running cowtest")
+def test_cowtest():
+    r.run_qemu(shell_script(
+        ['cowtest'],
+    terminate_match="^file: ok$|panic: "))
+
+@test(10, "simple", parent=test_cowtest)
+def test_simple():
+    matches = re.findall("^simple: ok$", r.qemu.output, re.M)
+    assert_equal(len(matches), 2, "Number of appearances of 'simple: ok'")
+
+@test(10, "three", parent=test_cowtest)
+def test_three():
+    matches = re.findall("^three: ok$", r.qemu.output, re.M)
+    assert_equal(len(matches), 3, "Number of appearances of 'three: ok'")
+
+@test(10, "file", parent=test_cowtest)
+def test_file():
+    r.match('^file: ok$')
+
+
+@test(20, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script(['usertests'],
+                            terminate_match=ALL_TESTS_RE),
+               timeout=150)
+    r.match('^ALL TESTS PASSED$')
+
+run_tests()
