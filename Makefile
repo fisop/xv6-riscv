@@ -189,7 +189,7 @@ qemu-gdb: $K/kernel .gdbinit fs.img
 
 -include conf/lab.mk
 
-ifneq ($(V),@)
+ifneq ($(V),)
 GRADEFLAGS += -v
 endif
 
