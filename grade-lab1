@@ -21,7 +21,7 @@ PTE_PRINT = """page table 0x00000000802aa000
 def test_alloctest():
     r.run_qemu(shell_script(
         ['alloctest'],
-        terminate_match="^memtest: (OK|FAILED)$|panic: "))
+        terminate_match="^memtest: (OK|FAILED)$|PANIC: "))
 
 @test(10, "filetest", parent=test_alloctest)
 def test_filetest():
@@ -55,7 +55,7 @@ def test_memtest():
 def test_cowtest():
     r.run_qemu(shell_script(
         ['cowtest'],
-    terminate_match="^ALL COW TESTS PASSED$|panic: "))
+    terminate_match="^ALL COW TESTS PASSED$|PANIC: "))
 
 @test(10, "simple", parent=test_cowtest)
 def test_simple():
