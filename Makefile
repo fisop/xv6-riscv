@@ -190,7 +190,7 @@ qemu-gdb: $K/kernel .gdbinit fs.img
 
 -include conf/lab.mk
 
-ifneq ($(V),@)
+ifneq ($(V),)
 GRADEFLAGS += -v
 endif
 
@@ -201,7 +201,7 @@ grade:
 	@echo $(MAKE) clean
 	@$(MAKE) clean || \
 	  (echo "'make clean' failed.  HINT: Do you have another running instance of xv6?" && exit 1)
-	./grade-lab-$(LAB) $(GRADEFLAGS)
+	./grade-tp$(LAB) $(GRADEFLAGS)
 
 WEBSUB := https://6828.scripts.mit.edu/2019/handin.py
 

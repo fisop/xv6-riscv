@@ -14,7 +14,7 @@ void
 sparse_memory(char *s)
 {
   char *i, *prev_end, *new_end;
-  
+
   prev_end = sbrk(REGION_SZ);
   if (prev_end == (char*)0xffffffffffffffffL) {
     printf("sbrk() failed\n");
@@ -99,7 +99,7 @@ int
 run(void f(char *), char *s) {
   int pid;
   int xstatus;
-  
+
   printf("running test %s\n", s);
   if((pid = fork()) < 0) {
     printf("runtest: fork error\n");
@@ -110,7 +110,7 @@ run(void f(char *), char *s) {
     exit(0);
   } else {
     wait(&xstatus);
-    if(xstatus != 0) 
+    if(xstatus != 0)
       printf("test %s: FAILED\n", s);
     else
       printf("test %s: OK\n", s);
@@ -125,7 +125,7 @@ main(int argc, char *argv[])
   if(argc > 1) {
     n = argv[1];
   }
-  
+
   struct test {
     void (*f)(char *);
     char *s;
@@ -135,7 +135,7 @@ main(int argc, char *argv[])
     { oom, "out of memory"},
     { 0, 0},
   };
-    
+
   printf("lazytests starting\n");
 
   int fail = 0;
