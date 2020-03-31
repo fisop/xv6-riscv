@@ -12,7 +12,7 @@ __all__ = []
 
 __all__ += ["ALL_TESTS_RE"]
 
-ALL_TESTS_RE = "^(SOME TESTS FAILED|ALL TESTS PASSED)$|panic: "
+ALL_TESTS_RE = "^(SOME TESTS FAILED|ALL TESTS PASSED)$|PANIC: "
 
 ##################################################################
 # Test structure
