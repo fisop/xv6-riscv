@@ -1,6 +1,16 @@
 K=kernel
 U=user
 
+# Run 'make V=1' to turn on verbose commands, or 'make V=0' to turn them off.
+ifeq ($(V),1)
+override V =
+endif
+ifeq ($(V),0)
+override V = @
+endif
+
+-include conf/env.mk
+
 OBJS = \
   $K/entry.o \
   $K/start.o \
@@ -73,16 +83,27 @@ endif
 
 LDFLAGS = -z max-page-size=4096
 
+%.o: %.c
+	@echo + cc $<
+	$(V)$(CC) $(CFLAGS) -c -o $@ $<
+
+%.o: %.S
+	@echo + as $<
+	$(V)$(CC) $(CFLAGS) -c -o $@ $<
+
 $K/kernel: $(OBJS) $K/kernel.ld $U/initcode
-	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS)
-	$(OBJDUMP) -S $K/kernel > $K/kernel.asm
-	$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym
+	@echo + ld $@
+	$(V)$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS)
+	$(V)$(OBJDUMP) -S $K/kernel > $K/kernel.asm
+	$(V)$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym
 
 $U/initcode: $U/initcode.S
-	$(CC) $(CFLAGS) -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
-	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o $U/initcode.out $U/initcode.o
-	$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
-	$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
+	@echo + as $<
+	$(V)$(CC) $(CFLAGS) -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
+	@echo + ld $@
+	$(V)$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o $U/initcode.out $U/initcode.o
+	$(V)$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
+	$(V)$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
 
 tags: $(OBJS) _init
 	etags *.S *.c
@@ -90,28 +111,34 @@ tags: $(OBJS) _init
 ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
 
 _%: %.o $(ULIB)
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
-	$(OBJDUMP) -S $@ > $*.asm
-	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
+	@echo + ld $<
+	$(V)$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
+	$(V)$(OBJDUMP) -S $@ > $*.asm
+	$(V)$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
 
 $U/usys.S : $U/usys.pl
-	perl $U/usys.pl > $U/usys.S
+	@echo + gen $@
+	$(V)perl $U/usys.pl > $U/usys.S
 
 $U/usys.o : $U/usys.S
-	$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
+	@echo + as $<
+	$(V)$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
 
 $U/_forktest: $U/forktest.o $(ULIB)
 	# forktest has less library code linked in - needs to be small
 	# in order to be able to max out the proc table.
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_forktest $U/forktest.o $U/ulib.o $U/usys.o
-	$(OBJDUMP) -S $U/_forktest > $U/forktest.asm
+	@echo + ld $@
+	$(V)$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_forktest $U/forktest.o $U/ulib.o $U/usys.o
+	$(V)$(OBJDUMP) -S $U/_forktest > $U/forktest.asm
 
 $U/_uthread: $U/uthread.o $U/uthread_switch.o $(ULIB)
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_uthread $U/uthread.o $U/uthread_switch.o $(ULIB)
-	$(OBJDUMP) -S $U/_uthread > $U/uthread.asm
+	@echo + ld $@
+	$(V)$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_uthread $U/uthread.o $U/uthread_switch.o $(ULIB)
+	$(V)$(OBJDUMP) -S $U/_uthread > $U/uthread.asm
 
 mkfs/mkfs: mkfs/mkfs.c $K/fs.h
-	gcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
+	@echo + ld $@
+	$(V)gcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
 
 # Prevent deletion of intermediate files, e.g. cat.o, after first build, so
 # that disk image changes after first build are persistent until clean.  More
@@ -147,12 +174,14 @@ UPROGS=\
 	$U/_alloctest\
 
 fs.img: mkfs/mkfs README user/xargstest.sh $(UPROGS)
-	mkfs/mkfs fs.img README user/xargstest.sh $(UPROGS)
+	@echo + mkfs $@
+	$(V)mkfs/mkfs fs.img README user/xargstest.sh $(UPROGS)
 
 -include kernel/*.d user/*.d
 
 clean:
-	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
+	@echo + rm *.o...
+	$(V)rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*/*.o */*.d */*.asm */*.sym \
 	$U/initcode $U/initcode.out $K/kernel fs.img \
 	mkfs/mkfs .gdbinit \
@@ -190,7 +219,7 @@ qemu-gdb: $K/kernel .gdbinit fs.img
 
 -include conf/lab.mk
 
-ifneq ($(V),)
+ifneq ($(V),@)
 GRADEFLAGS += -v
 endif
 
