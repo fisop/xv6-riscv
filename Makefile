@@ -92,15 +92,15 @@ LDFLAGS = -z max-page-size=4096
 	$(V)$(CC) $(CFLAGS) -c -o $@ $<
 
 $K/kernel: $(OBJS) $K/kernel.ld $U/initcode
-	@echo + ld $K/kernel
+	@echo + ld $@
 	$(V)$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS)
 	$(V)$(OBJDUMP) -S $K/kernel > $K/kernel.asm
 	$(V)$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym
 
 $U/initcode: $U/initcode.S
-	@echo + as $U/initcode.S
+	@echo + as $<
 	$(V)$(CC) $(CFLAGS) -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
-	@echo + ld $U/initcode
+	@echo + ld $@
 	$(V)$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o $U/initcode.out $U/initcode.o
 	$(V)$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
 	$(V)$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
@@ -117,27 +117,27 @@ _%: %.o $(ULIB)
 	$(V)$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
 
 $U/usys.S : $U/usys.pl
-	@echo + perl $U/usys.pl
+	@echo + gen $@
 	$(V)perl $U/usys.pl > $U/usys.S
 
 $U/usys.o : $U/usys.S
-	@echo + as $U/usys.S
+	@echo + as $<
 	$(V)$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
 
 $U/_forktest: $U/forktest.o $(ULIB)
 	# forktest has less library code linked in - needs to be small
 	# in order to be able to max out the proc table.
-	@echo + ld $U/_forktest
+	@echo + ld $@
 	$(V)$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_forktest $U/forktest.o $U/ulib.o $U/usys.o
 	$(V)$(OBJDUMP) -S $U/_forktest > $U/forktest.asm
 
 $U/_uthread: $U/uthread.o $U/uthread_switch.o $(ULIB)
-	@echo + ld $U/_uthread
+	@echo + ld $@
 	$(V)$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_uthread $U/uthread.o $U/uthread_switch.o $(ULIB)
 	$(V)$(OBJDUMP) -S $U/_uthread > $U/uthread.asm
 
 mkfs/mkfs: mkfs/mkfs.c $K/fs.h
-	@echo + ld mkfs/mkfs
+	@echo + ld $@
 	$(V)gcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
 
 # Prevent deletion of intermediate files, e.g. cat.o, after first build, so
@@ -174,13 +174,13 @@ UPROGS=\
 	$U/_alloctest\
 
 fs.img: mkfs/mkfs README user/xargstest.sh $(UPROGS)
-	@echo + mkfs fs.img
+	@echo + mkfs $@
 	$(V)mkfs/mkfs fs.img README user/xargstest.sh $(UPROGS)
 
 -include kernel/*.d user/*.d
 
 clean:
-	@echo + rm created files
+	@echo + rm *.o...
 	$(V)rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*/*.o */*.d */*.asm */*.sym \
 	$U/initcode $U/initcode.out $K/kernel fs.img \
