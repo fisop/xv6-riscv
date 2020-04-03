@@ -49,7 +49,8 @@ acquire(struct spinlock *lk)
   
   // Tell the C compiler and the processor to not move loads or stores
   // past this point, to ensure that the critical section's memory
-  // references happen after the lock is acquired.
+  // references happen strictly after the lock is acquired.
+  // On RISC-V, this emits a fence instruction.
   __sync_synchronize();
 
   // Record info about lock acquisition for holding() and debugging.
@@ -67,8 +68,10 @@ release(struct spinlock *lk)
 
   // Tell the C compiler and the CPU to not move loads or stores
   // past this point, to ensure that all the stores in the critical
-  // section are visible to other CPUs before the lock is released.
-  // On RISC-V, this turns into a fence instruction.
+  // section are visible to other CPUs before the lock is released,
+  // and that loads in the critical section occur strictly before
+  // the lock is released.
+  // On RISC-V, this emits a fence instruction.
   __sync_synchronize();
 
   // Release the lock, equivalent to lk->locked = 0.
@@ -126,7 +129,7 @@ void
 print_lock(struct spinlock *lk)
 {
   if(lk->n > 0) 
-    printf("lock: %s: #fetch-and-add %d #acquire() %d\n", lk->name, lk->nts, lk->n);
+    printf("lock: %s: #test-and-set %d #acquire() %d\n", lk->name, lk->nts, lk->n);
 }
 
 uint64
@@ -143,6 +146,7 @@ sys_ntas(void)
       if(locks[i] == 0)
         break;
       locks[i]->nts = 0;
+      locks[i]->n = 0;
     }
     return 0;
   }
