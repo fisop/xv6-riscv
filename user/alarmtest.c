@@ -54,7 +54,7 @@ test0()
   }
   sigalarm(0, 0);
   if(count > 0){
-    printf("test0 passed\n");
+    printf("test0: OK\n");
   } else {
     printf("\ntest0 failed: the kernel never called the alarm handler\n");
   }
@@ -102,7 +102,7 @@ test1()
     // to get an incorrect value.
     printf("\ntest1 failed: foo() executed fewer times than it was called\n");
   } else {
-    printf("test1 passed\n");
+    printf("test1: OK\n");
   }
 }
 
@@ -118,6 +118,7 @@ test2()
   printf("test2 start\n");
   if ((pid = fork()) < 0) {
     printf("test2: fork failed\n");
+    exit(1);
   }
   if (pid == 0) {
     count = 0;
@@ -136,7 +137,9 @@ test2()
   }
   wait(&status);
   if (status == 0) {
-    printf("test2 passed\n");
+    printf("test2: OK\n");
+  } else {
+    printf("test2: FAILED\n");
   }
 }
 

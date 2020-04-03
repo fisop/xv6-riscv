@@ -49,8 +49,8 @@ thread_schedule(void)
   }
 
   if (next_thread == 0) {
-    printf("thread_schedule: no runnable threads\n");
-    exit(-1);
+    printf("uthread: no runnable threads\n");
+    exit(0);
   }
 
   if (current_thread != next_thread) {         /* switch threads?  */
@@ -157,5 +157,6 @@ main(int argc, char *argv[])
   thread_create(thread_b);
   thread_create(thread_c);
   thread_schedule();
-  exit(0);
+  printf("uthread: FAILED\n");
+  exit(-1);
 }
